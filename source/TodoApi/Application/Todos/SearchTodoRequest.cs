@@ -25,9 +25,7 @@ namespace TodoApi.Application.Todos
                 .Where(x => (search.Id == null || x.Id == search.Id) &&
                     (search.Title == null || x.Title == search.Title) &&
                     (search.Description == null || x.Description == search.Description) &&
-                    (search.Completed == null || x.Completed == search.Completed) &&
-                    (search.CompletedOn == null || x.CompletedOn == search.CompletedOn) &&
-                    (search.Progress == null || x.Progress == search.Progress));
+                    (search.Completed == null || x.Completed == search.Completed));
         }
     }
 

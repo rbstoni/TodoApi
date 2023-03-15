@@ -5,59 +5,52 @@ using TodoApi.Application.Common.Persistence;
 using TodoApi.Application.Common.Validation;
 using TodoApi.Application.Todos;
 using TodoApi.Domain.Todos;
-using TodoApi.Dtos;
 
 namespace TodoApi.Application.TodoItems
 {
-    public class CreateTodoItemRequest : IRequest<TodoItemDto>
+    public class DeleteAllTodoItemsRequest : IRequest<int>
     {
         public int TodoId { get; set; }
-        public CreateTodoInput Input { get; set; }
 
-        public CreateTodoItemRequest(int todoId, CreateTodoInput input)
+        public DeleteAllTodoItemsRequest(int todoId)
         {
             TodoId = todoId;
-            Input = input;
         }
     }
 
-    public class CreateTodoItemRequestValidator : CustomValidator<CreateTodoItemRequest>
+    public class DeleteAllTodoItemsRequestValidator : CustomValidator<DeleteAllTodoItemsRequest>
     {
-        public CreateTodoItemRequestValidator(IReadRepository<Todo> repository)
+        public DeleteAllTodoItemsRequestValidator(IReadRepository<Todo> repository)
         {
             RuleLevelCascadeMode = CascadeMode.Stop;
 
             RuleFor(x => x.TodoId)
                 .NotEqual(0)
                 .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdSpec(id), ct) == true);
-
-            RuleFor(x => x.Input)
-                .ChildRules(c => c.RuleFor(p => p.Title).NotEmpty());
         }
     }
 
-    public class CreateTodoItemRequestHandler : IRequestHandler<CreateTodoItemRequest, TodoItemDto>
+    public class DeleteAllTodoItemsRequestHandler : IRequestHandler<DeleteAllTodoItemsRequest, int>
     {
-        private readonly CreateTodoItemRequestValidator validator;
+        private readonly DeleteAllTodoItemsRequestValidator validator;
         private readonly IRepository<Todo> repository;
 
-        public CreateTodoItemRequestHandler(CreateTodoItemRequestValidator validator, IRepository<Todo> repository)
+        public DeleteAllTodoItemsRequestHandler(DeleteAllTodoItemsRequestValidator validator, IRepository<Todo> repository)
         {
             this.validator = validator;
             this.repository = repository;
         }
 
-        public async Task<TodoItemDto> Handle(CreateTodoItemRequest request, CancellationToken cancellationToken)
+        public async Task<int> Handle(DeleteAllTodoItemsRequest request, CancellationToken cancellationToken)
         {
             await validator.ValidateAndThrowAsync(request, cancellationToken);
             var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.TodoId), cancellationToken);
             if (todo != null)
             {
-                todo.AddTodoItem(request.Input.Title!, request.Input.Description, request.Input.Done);
+                todo.RemoveAllTodoItems();
                 await repository.UpdateAsync(todo);
-                var todoItems = todo.TodoItems.Last();
 
-                return new TodoItemDto(todoItems);
+                return todo.Id;
             }
             else { throw new NotFoundException("Not Found"); }
         }

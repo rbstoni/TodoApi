@@ -17,9 +17,9 @@ namespace TodoApi.Application.Todos
             Description = description;
         }
 
-        public string Description { get; set; }
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Description { get; set; }
 
     }
     public class UpdateTodoRequestHandler : IRequestHandler<UpdateTodoRequest, TodoDto>
@@ -37,7 +37,7 @@ namespace TodoApi.Application.Todos
         public async Task<TodoDto> Handle(UpdateTodoRequest request, CancellationToken cancellationToken)
         {
             await validator.ValidateAndThrowAsync(request, cancellationToken);
-            var todo = await repository.FirstOrDefaultAsync(new TodoByIdSpec(request.Id));
+            var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.Id));
             todo!.UpdateTodo(request.Name, request.Description);
             await repository.UpdateAsync(todo);
 
@@ -51,7 +51,7 @@ namespace TodoApi.Application.Todos
         public UpdateTodoRequestValidator(IReadRepository<Todo> repository)
         {
             RuleFor(x => x.Id)
-                .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdSpec(id)) == true);
+                .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdIncludeTodoItemSpec(id)) == true);
 
             RuleFor(x => x.Name)
                 .NotEmpty()

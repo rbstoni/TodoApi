@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -35,8 +36,32 @@ namespace TodoApi.Endpoints
                     return result;
                 });
 
-            group.MapGet("/todo-items", GetAllTodoItems);
-            group.MapPost("/todo-items/add", AddTodoItems);
+            group.MapGet("/todo-items/", GetAllTodoItems)
+                .WithMetadata(new SwaggerOperationAttribute("Get all todo item for a todo"))
+                .Produces<TodoItemDto>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status204NoContent)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapPost("/todo-items/", AddTodoItems)
+                .WithMetadata(new SwaggerOperationAttribute("Add new todo item for a todo"))
+                .Produces<TodoItemDto>(StatusCodes.Status201Created)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapPut("/todo-items/{id}", UpdateTodoItem)
+                .WithMetadata(new SwaggerOperationAttribute("Update todo item for a todo"))
+                .Produces<TodoItemDto>(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapDelete("/todo-items/{id}", DeleteTodoItem)
+                .WithMetadata(new SwaggerOperationAttribute("Delete todo item for a todo"))
+                .Produces(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapDelete("/todo-items/", DeleteAllTodoItems)
+                .WithMetadata(new SwaggerOperationAttribute("Delete all todo items"))
+                .Produces(StatusCodes.Status200OK)
+                .ProducesProblem(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
 
             return app;
         }
@@ -45,8 +70,11 @@ namespace TodoApi.Endpoints
             try
             {
                 var result = await mediator.Send(new TodoItemSearchRequest(todoId, searchCriteria));
-
-                return TypedResults.Ok(result);
+                if (result != null && result.Any())
+                {
+                    return TypedResults.Ok(result);
+                }
+                return TypedResults.NotFound();
             }
             catch (Exception)
             {
@@ -60,7 +88,49 @@ namespace TodoApi.Endpoints
             {
                 var result = await mediator.Send(new CreateTodoItemRequest(todoId, input));
 
-                return TypedResults.Created($"/todos/{todoId}", todoId);
+                return TypedResults.Created($"/todos/{todoId}", result);
+            }
+            catch (Exception)
+            {
+                return TypedResults.StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+        }
+
+        static async Task<IResult> UpdateTodoItem(int todoId, CreateTodoInput input, IMediator mediator)
+        {
+            try
+            {
+                var result = await mediator.Send(new CreateTodoItemRequest(todoId, input));
+
+                return TypedResults.Created($"/todos/{todoId}", result);
+            }
+            catch (Exception)
+            {
+                return TypedResults.StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+        }
+
+        static async Task<IResult> DeleteTodoItem(int todoId, int todoItemId, IMediator mediator)
+        {
+            try
+            {
+                var result = await mediator.Send(new DeleteTodoItemRequest(todoId, todoItemId));
+
+                return TypedResults.Ok();
+            }
+            catch (Exception)
+            {
+                return TypedResults.StatusCode((int)HttpStatusCode.InternalServerError);
+            }
+        }
+
+        static async Task<IResult> DeleteAllTodoItems(int todoId, int todoItemId, IMediator mediator)
+        {
+            try
+            {
+                var result = await mediator.Send(new DeleteAllTodoItemsRequest(todoId));
+
+                return TypedResults.Ok();
             }
             catch (Exception)
             {

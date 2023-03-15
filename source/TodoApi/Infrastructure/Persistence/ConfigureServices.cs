@@ -16,7 +16,7 @@ namespace TodoApi.Infrastructure.Persistence
             }
 
             services
-                .AddDbContext<TodoDbContext>(opt => opt.UseSqlServer(connectionString))
+                .AddDbContext<TodoDbContext>(opt => opt.UseSqlite(connectionString))
                 .AddTransient<IDatabaseInitializer, DatabaseInitializer>()
                 .AddRepositories();
 

@@ -1,16 +1,9 @@
-﻿using Mapster;
-using MediatR;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using MediatR;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Diagnostics;
 using System.Net;
-using TodoApi.Application.Common.Exceptions;
-using TodoApi.Application.Common.Persistence;
 using TodoApi.Application.Todos;
-using TodoApi.Domain.Todos;
 using TodoApi.Dtos;
-using TodoApi.Infrastructure.Middleware;
 
 namespace TodoApi.Endpoints
 {
@@ -35,19 +28,29 @@ namespace TodoApi.Endpoints
                     return result;
                 });
             group.MapGet("/", SearchTodos)
-                .WithMetadata(new SwaggerOperationAttribute("Get and filter todos"))
+                .WithMetadata(new SwaggerOperationAttribute("Get and filter all todo"))
                 .Produces<List<TodoDto>>(StatusCodes.Status200OK)
                 .ProducesProblem(StatusCodes.Status204NoContent)
-                .ProducesProblem(StatusCodes.Status500InternalServerError)
-                .ProducesValidationProblem();
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
             group.MapPost("/", CreateTodo)
                 .WithMetadata(new SwaggerOperationAttribute("Create a new todo"))
                 .Produces<TodoDto>(StatusCodes.Status201Created)
-                .ProducesProblem(StatusCodes.Status500InternalServerError)
-                .ProducesValidationProblem();
-            group.MapGet("/{id}", GetTodo);
-            group.MapPut("/{id}", UpdateTodo);
-            group.MapDelete("/{id}", DeleteTodo);
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapGet("/{id}", GetTodo)
+                .WithMetadata(new SwaggerOperationAttribute("Get detail of a todo"))
+                .Produces<TodoDto>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapPut("/{id}", UpdateTodo)
+                .WithMetadata(new SwaggerOperationAttribute("Update detail a todo"))
+                .Produces<TodoDto>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
+            group.MapDelete("/{id}", DeleteTodo)
+                .WithMetadata(new SwaggerOperationAttribute("Delete a todo"))
+                .Produces<TodoDto>(StatusCodes.Status200OK)
+                .Produces(StatusCodes.Status404NotFound)
+                .ProducesProblem(StatusCodes.Status500InternalServerError);
 
             return app;
         }

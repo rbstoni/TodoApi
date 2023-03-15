@@ -22,8 +22,8 @@ namespace TodoApi.Infrastructure.Persistence
                 .HasKey(x => x.Id);
 
             builder.Entity<Todo>()
-                .Property(x => x.Progress)
-                .HasColumnType("decimal(18,2)");
+                .Property(x => x.Status)
+                .HasConversion<string>();
 
             builder.Entity<Todo>()
                 .Property(x => x.Title)

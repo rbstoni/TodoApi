@@ -21,7 +21,7 @@ namespace TodoApi.Application.Todos
         {
             RuleFor(p => p.Id)
                 .NotEqual(0)
-                .MustAsync((async (id, ct) => await repository.AnyAsync(new TodoByIdSpec(id)) == true));
+                .MustAsync((async (id, ct) => await repository.AnyAsync(new TodoByIdIncludeTodoItemSpec(id)) == true));
         }
     }
 
@@ -38,7 +38,7 @@ namespace TodoApi.Application.Todos
         public async Task<int> Handle(DeleteTodoRequest request, CancellationToken cancellationToken)
         {
             await validator.ValidateAndThrowAsync(request, cancellationToken);
-            var todo = await repository.FirstOrDefaultAsync(new TodoByIdSpec(request.Id));
+            var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.Id));
             await repository.DeleteAsync(todo);
 
             return request.Id;

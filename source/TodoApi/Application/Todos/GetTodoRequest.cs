@@ -21,7 +21,7 @@ namespace TodoApi.Application.Todos
         public GetTodoRequestValidator(IReadRepository<Todo> repository)
         {
             RuleFor(x => x.Id)
-                .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdSpec(id)) == true);
+                .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdIncludeTodoItemSpec(id)) == true);
         }
     }
 
@@ -39,7 +39,7 @@ namespace TodoApi.Application.Todos
         public async Task<TodoDto> Handle(GetTodoRequest request, CancellationToken cancellationToken)
         {
             await validator.ValidateAndThrowAsync(request, cancellationToken);
-            var todo = await repository.FirstOrDefaultAsync(new TodoByIdSpec(request.Id));
+            var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.Id));
 
             return new TodoDto(todo!);
         }

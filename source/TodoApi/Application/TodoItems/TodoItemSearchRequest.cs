@@ -1,6 +1,10 @@
-﻿using MediatR;
-using System.Collections.Immutable;
+﻿using FluentValidation;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+using TodoApi.Application.Common.Exceptions;
 using TodoApi.Application.Common.Persistence;
+using TodoApi.Application.Common.Result;
+using TodoApi.Application.Common.Validation;
 using TodoApi.Application.Todos;
 using TodoApi.Domain.Todos;
 
@@ -16,37 +20,51 @@ namespace TodoApi.Dtos
             SearchCriteria = searchCriteria;
         }
     }
+    public class TodoItemSearchRequestValidator : CustomValidator<TodoItemSearchRequest>
+    {
+        public TodoItemSearchRequestValidator(IReadRepository<Todo> repository)
+        {
+            RuleFor(x => x.TodoId)
+                .NotEqual(0)
+                .MustAsync(async (id, ct) => await repository.AnyAsync(new TodoByIdSpec(id), ct) == true);
+        }
+    }
     public class TodoItemSearchRequestHandler : IRequestHandler<TodoItemSearchRequest, IEnumerable<TodoItemDto>>
     {
+        private readonly TodoItemSearchRequestValidator validator;
         private readonly IReadRepository<Todo> repository;
 
-        public TodoItemSearchRequestHandler(IReadRepository<Todo> repository)
+        public TodoItemSearchRequestHandler(TodoItemSearchRequestValidator validator, IReadRepository<Todo> repository)
         {
+            this.validator = validator;
             this.repository = repository;
         }
 
         public async Task<IEnumerable<TodoItemDto>> Handle(TodoItemSearchRequest request, CancellationToken cancellationToken)
         {
-            var todo = await repository.FirstOrDefaultAsync(new TodoByIdSpec(request.TodoId));
-            var todoItems = todo?.TodoItems.AsQueryable();
-            if (request.SearchCriteria.Done != null)
+            await validator.ValidateAndThrowAsync(request, cancellationToken);
+            var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.TodoId), cancellationToken);
+            if (todo != null)
             {
-                todoItems = todoItems?.Where(x => x.Done == request.SearchCriteria.Done);
+                var todoItems = todo.TodoItems.AsQueryable();
+                if (request.SearchCriteria.Done != null)
+                {
+                    todoItems = todoItems?.Where(x => x.Done == request.SearchCriteria.Done);
+                }
+
+                if (request.SearchCriteria.Id != null)
+                {
+                    todoItems = todoItems?.Where(x => x.Id == request.SearchCriteria.Id);
+                }
+
+                if (!string.IsNullOrEmpty(request.SearchCriteria.Title))
+                {
+                    todoItems = todoItems?.Where(x => x.Title == request.SearchCriteria.Title);
+                }
+                var result = todoItems?.Select(x => new TodoItemDto(x)).ToArray();
+                return result!.ToList();
             }
-
-            if (request.SearchCriteria.Id != null)
-            {
-                todoItems = todoItems?.Where(x => x.Id == request.SearchCriteria.Id);
-            }
-
-            if (!string.IsNullOrEmpty(request.SearchCriteria.Name))
-            {
-                todoItems = todoItems?.Where(x => x.Title == request.SearchCriteria.Name);
-            }
-
-            var result = todoItems?.Select(x => new TodoItemDto(x)).ToImmutableArray() ?? new ImmutableArray<TodoItemDto>();
-
-            return result;
+            throw new NotFoundException("Todo not found");
         }
     }
 }

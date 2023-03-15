@@ -9,21 +9,22 @@ using TodoApi.Dtos;
 
 namespace TodoApi.Application.TodoItems
 {
-    public class CreateTodoItemRequest : IRequest<TodoItemDto>
+    public class UpdateTodoItemRequest : IRequest<TodoItemDto>
     {
         public int TodoId { get; set; }
+        public int TodoItemId { get; set; }
         public CreateTodoInput Input { get; set; }
 
-        public CreateTodoItemRequest(int todoId, CreateTodoInput input)
+        public UpdateTodoItemRequest(int todoId, CreateTodoInput input)
         {
             TodoId = todoId;
             Input = input;
         }
     }
 
-    public class CreateTodoItemRequestValidator : CustomValidator<CreateTodoItemRequest>
+    public class UpdateTodoItemRequestValidator : CustomValidator<UpdateTodoItemRequest>
     {
-        public CreateTodoItemRequestValidator(IReadRepository<Todo> repository)
+        public UpdateTodoItemRequestValidator(IReadRepository<Todo> repository)
         {
             RuleLevelCascadeMode = CascadeMode.Stop;
 
@@ -36,28 +37,28 @@ namespace TodoApi.Application.TodoItems
         }
     }
 
-    public class CreateTodoItemRequestHandler : IRequestHandler<CreateTodoItemRequest, TodoItemDto>
+    public class UpdateTodoItemRequestHandler : IRequestHandler<UpdateTodoItemRequest, TodoItemDto>
     {
-        private readonly CreateTodoItemRequestValidator validator;
+        private readonly UpdateTodoItemRequestValidator validator;
         private readonly IRepository<Todo> repository;
 
-        public CreateTodoItemRequestHandler(CreateTodoItemRequestValidator validator, IRepository<Todo> repository)
+        public UpdateTodoItemRequestHandler(UpdateTodoItemRequestValidator validator, IRepository<Todo> repository)
         {
             this.validator = validator;
             this.repository = repository;
         }
 
-        public async Task<TodoItemDto> Handle(CreateTodoItemRequest request, CancellationToken cancellationToken)
+        public async Task<TodoItemDto> Handle(UpdateTodoItemRequest request, CancellationToken cancellationToken)
         {
             await validator.ValidateAndThrowAsync(request, cancellationToken);
             var todo = await repository.FirstOrDefaultAsync(new TodoByIdIncludeTodoItemSpec(request.TodoId), cancellationToken);
             if (todo != null)
             {
-                todo.AddTodoItem(request.Input.Title!, request.Input.Description, request.Input.Done);
+                var todoItem = todo.TodoItems.FirstOrDefault(x => x.Id == request.TodoItemId);
+                todo.UpdateTodoItem(request.TodoItemId, request.Input.Title, request.Input.Description, request.Input.Done);
                 await repository.UpdateAsync(todo);
-                var todoItems = todo.TodoItems.Last();
 
-                return new TodoItemDto(todoItems);
+                return new TodoItemDto(todoItem);
             }
             else { throw new NotFoundException("Not Found"); }
         }
