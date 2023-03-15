@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Security.Cryptography;
-using System.Text;
 using TodoApi.Domain.Todos;
 
 namespace TodoApi.Infrastructure.Persistence

@@ -1,9 +1,7 @@
 ﻿using FluentValidation;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using TodoApi.Application.Common.Exceptions;
 using TodoApi.Application.Common.Persistence;
-using TodoApi.Application.Common.Result;
 using TodoApi.Application.Common.Validation;
 using TodoApi.Application.Todos;
 using TodoApi.Domain.Todos;

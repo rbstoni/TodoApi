@@ -13,7 +13,7 @@ namespace TodoApi.Application.Todos
         public string? Description { get; set; }
         public CreateTodoRequest(string title, string? description)
         {
-            Title = title ;
+            Title = title;
             Description = description;
         }
     }

@@ -7,7 +7,7 @@ namespace TodoApi.Application.Todos
     {
         public TodoByIdIncludeTodoItemSpec(int id)
         {
-            Query.Where(x => x.Id == id).Include(x=>x.TodoItems);
+            Query.Where(x => x.Id == id).Include(x => x.TodoItems);
         }
     }
 }

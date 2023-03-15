@@ -1,6 +1,5 @@
 using Serilog;
 using Serilog.Context;
-using TodoApi.Application.Common.Interfaces;
 
 namespace TodoApi.Infrastructure.Middleware
 {

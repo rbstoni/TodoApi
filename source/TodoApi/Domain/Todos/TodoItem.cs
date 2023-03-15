@@ -1,5 +1,4 @@
 ﻿using TodoApi.Domain.Common;
-using TodoApi.Dtos;
 
 namespace TodoApi.Domain.Todos
 {

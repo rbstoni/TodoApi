@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TodoApi.Application.Common.Result
+﻿namespace TodoApi.Application.Common.Result
 {
     public class SuccessResult : OperationResult
     {

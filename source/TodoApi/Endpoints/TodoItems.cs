@@ -1,17 +1,8 @@
 ﻿using MediatR;
-using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using TodoApi.Application.Common.Persistence;
 using TodoApi.Application.TodoItems;
-using TodoApi.Application.Todos;
-using TodoApi.Domain.Todos;
 using TodoApi.Dtos;
 
 namespace TodoApi.Endpoints
